@@ -2,12 +2,13 @@ DEVCENTER = dc-devlz
 PROJECT = project-devlz
 RG = rg-devlz
 CATALOG = Catalog-devlz
+ENVDEF = dotnet-function-app
+ENVNAME = fnappdcdemo1
 
-.PHONY: build-all
-build-all: build-demo1
+build-catalog: build-dotnet-function-app
 
-build-demo1:
-	cd "catalog/demo1" && az bicep build -f main.bicep --outfile azuredeploy.json --mode complete
+build-dotnet-function-app:
+	cd "catalog/dotnet-function-app" && az bicep build -f main.bicep --outfile azuredeploy.json 
 
 .PHONY: deploy-dc
 deploy-dc:
@@ -28,6 +29,14 @@ list-environment-types:
 .PHONY: sync-catalog
 sync-catalog:	
 	az devcenter admin catalog sync --dev-center $(DEVCENTER) --name $(CATALOG) --resource-group $(RG)
+
+.PHONY: create-env
+create-env:
+	az devcenter dev environment create --catalog-name $(CATALOG)  --dev-center $(DEVCENTER)  --project $(PROJECT) --environment-type dev --environment-name $(ENVNAME) --environment-definition-name $(ENVDEF)
+
+.PHONY: delete-env
+delete-env:
+	az devcenter dev environment delete --catalog-name $(CATALOG)  --dev-center $(DEVCENTER)  --project $(PROJECT) --environment-type dev --environment-name $(ENVNAME) --environment-definition-name $(ENVDEF)
 
 new-catalog-item:
 	mkdir "catalog/new-catalog-item"

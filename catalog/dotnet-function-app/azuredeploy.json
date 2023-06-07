@@ -7,7 +7,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "12590883786752625146"
+      "templateHash": "8988716848221144945"
     }
   },
   "parameters": {
@@ -16,8 +16,7 @@
       "defaultValue": "dev"
     },
     "slug": {
-      "type": "string",
-      "defaultValue": "dlzdemo"
+      "type": "string"
     },
     "location": {
       "type": "string",
@@ -54,7 +53,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "12168109130252305529"
+              "templateHash": "9249548172519935533"
             }
           },
           "parameters": {
@@ -147,7 +146,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "11431895953958998938"
+              "templateHash": "17868888039603934979"
             }
           },
           "parameters": {
@@ -212,6 +211,10 @@
               "metadata": {
                 "description": "The ID of the private DNS zone."
               }
+            },
+            "allowPublicAccess": {
+              "type": "bool",
+              "defaultValue": false
             }
           },
           "variables": {
@@ -237,7 +240,7 @@
                   "family": "A"
                 },
                 "networkAcls": {
-                  "defaultAction": "Deny",
+                  "defaultAction": "[if(parameters('allowPublicAccess'), 'Allow', 'Deny')]",
                   "virtualNetworkRules": "[variables('kvSubnetRules')]",
                   "ipRules": "[variables('kvIpRules')]"
                 },
@@ -255,6 +258,10 @@
                 "logs": [
                   {
                     "categoryGroup": "allLogs",
+                    "enabled": true
+                  },
+                  {
+                    "categoryGroup": "audit",
                     "enabled": true
                   }
                 ],
@@ -378,7 +385,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "14855696765816731431"
+              "templateHash": "4721173615582677338"
             }
           },
           "parameters": {
@@ -639,19 +646,6 @@
               },
               "dependsOn": [
                 "blobService",
-                "storageaccount"
-              ]
-            },
-            "saDeleteLock": {
-              "condition": "[not(variables('isTestEnvironment'))]",
-              "type": "Microsoft.Authorization/locks",
-              "apiVersion": "2020-05-01",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
-              "name": "[format('CanNotDelete-{0}', variables('storageAccountName'))]",
-              "properties": {
-                "level": "CanNotDelete"
-              },
-              "dependsOn": [
                 "storageaccount"
               ]
             },

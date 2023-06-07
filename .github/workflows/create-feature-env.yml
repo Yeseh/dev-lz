@@ -1,0 +1,46 @@
+name: Sync DevCenter catalog
+on: 
+    push:
+        branches:
+            - feature/*
+
+env:
+    DEVCENTER: 'dc-devlz'
+    CATALOG: 'Catalog-devlz'
+    PROJECT: 'project-devlz'
+    RG: 'rg-devlz'
+    ENVDEF: 'dotnet-function-app'
+
+jobs:
+    create-feature-environment:
+        runs-on: ubuntu-latest
+        steps:
+        - name: 'Az Cli Login'
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID}}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: 'Install DevCenter extension'
+          run: az extension add --name devcenter
+
+        - name: Set Branch Name 
+          id: vars
+          run: echo ::set-output name=branch::${GITHUB_REF#refs/*/}
+
+        - name: Check Branch Name 
+          run: echo ${{ steps.vars.outputs.branch }}
+        
+        - name: 'Create Feature environment if not exists'
+          shell: pwsh
+          run: |
+            $branch = '${{ steps.vars.outputs.branch }}'
+            $envName $branch.Replace("/", "_")
+            $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name test | ConvertFrom-Json)
+            if ($null -eq $output) {
+                Write-Host "Environment for branch $branch not found, creating..."
+                az devcenter dev environment create --environment-name $envName --catalog-name ${{ env.CATALOG }} --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition ${{ env.ENVDEF }} 
+            } else {
+                Write-Host "Environment for branch $branch already exists..."
+            }

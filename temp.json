@@ -1,0 +1,8 @@
+{
+  "name": "yeseh-dev-lz-prod",
+  "subject": "repo:yeseh/dev-lz:environment:prod",
+  "issuer": "https://token.actions.githubusercontent.com/",
+  "audiences": [
+    "api://AzureADTokenExchange"
+  ]
+}

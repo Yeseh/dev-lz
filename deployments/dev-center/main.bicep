@@ -1,7 +1,7 @@
 targetScope = 'subscription'
 
 param location string = 'westeurope'
-@allowed(['','dev', 'tst', 'acc', 'prd'])
+@allowed(['','dev', 'test', 'acc', 'prod'])
 param environment string = 'dev'
 @description('The slug is used to create unique names for resources')
 param slug string = 'devlz'

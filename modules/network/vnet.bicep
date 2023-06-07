@@ -1,4 +1,4 @@
-@allowed(['', 'dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'test', 'acc', 'prod'])
 @description('The environment this module is deployed to.')
 param environment string
 

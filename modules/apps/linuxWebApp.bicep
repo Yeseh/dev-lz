@@ -10,7 +10,7 @@ param integrationSnetId string
 param logAnalyticsWorkspaceId string
 @description('The resource ID of the app service plan to use')
 param appServicePlanId string
-@allowed(['', 'dev', 'acc', 'tst', 'prd'])
+@allowed(['', 'dev', 'acc', 'test', 'prod'])
 @description('The environment this module is deployed to.')
 param environment string
 param alwaysOn bool = false

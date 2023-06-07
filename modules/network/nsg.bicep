@@ -1,7 +1,7 @@
 @description('The Azure resource location.')
 param location string
 
-@allowed(['', 'dev','tst','prd'])
+@allowed(['', 'dev','test','prod'])
 @description('The environment this module is deployed to.')
 param environment string
 

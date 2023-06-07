@@ -19,11 +19,15 @@ whatif-dc:
 
 .PHONY: list-catalog-items
 list-catalog-items:
-	az devcenter dev catalog-item list --devcenter $(DEVCENTER) --project $(PROJECT) -o table
+	az devcenter dev environment-definition list --dev-center $(DEVCENTER) --project $(PROJECT) -o table
 
 .PHONY: list-environment-types
 list-environment-types:
 	az devcenter dev environment-type list --dev-center $(DEVCENTER) --project-name $(PROJECT) -o table
+
+.PHONY: sync-catalog
+sync-catalog:	
+	az devcenter admin catalog sync --dev-center $(DEVCENTER) --name $(CATALOG) --resource-group $(RG)
 
 new-catalog-item:
 	mkdir "catalog/new-catalog-item"

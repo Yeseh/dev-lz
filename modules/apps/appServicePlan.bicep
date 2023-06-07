@@ -1,4 +1,4 @@
-@allowed(['', 'tst', 'acc', 'dev', 'prd'])
+@allowed(['', 'test', 'acc', 'dev', 'prod'])
 @description('The environment this module is deployed to.')
 param environment string = ''
 param location string = resourceGroup().location

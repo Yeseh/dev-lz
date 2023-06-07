@@ -7,7 +7,7 @@ param location string = resourceGroup().location
 @description('Small identifier for the project, used to build resource names.')
 param slug string
 
-@allowed(['', 'dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'test', 'acc', 'prod'])
 @description('The environment this module is deployed to.')
 param environment string = ''
 

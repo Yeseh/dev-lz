@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 @description('The Azure resource location.')
 param location string
 
-@allowed(['', 'dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'test', 'acc', 'prod'])
 @description('The environment this module is deployed to.')
 param environment string
 
@@ -43,7 +43,7 @@ var saSubnetRules = map(range(0, length(subnetIds)), i => {
   id: subnetIds[i]
 })
 
-var isTestEnvironment = environment == 'tst' || environment == 'dev'
+var isTestEnvironment = environment == 'test' || environment == 'dev'
 var storageAccountName = toLower(empty(environment) ? 'sa${slug}' : 'sa${slug}${environment}')
 var privateEndpointName = 'pep-${storageAccountName}'
 var secretName = '${storageAccountName}-access-key'

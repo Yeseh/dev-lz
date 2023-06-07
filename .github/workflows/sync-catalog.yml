@@ -1,0 +1,33 @@
+name: Sync DevCenter catalog
+on: 
+    push:
+        branches:
+            - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+    DEVCENTER: 'dc-devlz'
+    CATALOG: 'Catalog-devlz'
+    RG: 'rg-devlz'
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+        environment: prod 
+        steps:
+        - name: 'Az Cli Login'
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: 'Install DevCenter extension'
+          run: az extension add --name devcenter
+
+        - name: 'Sync DevCenter catalog'
+          run: | 
+            az devcenter admin catalog sync --dev-center $DEVCENTER --name $CATALOG --resource-group $RG

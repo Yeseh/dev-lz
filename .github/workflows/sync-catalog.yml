@@ -18,12 +18,6 @@ jobs:
         runs-on: ubuntu-latest
         environment: prod 
         steps:
-        - name: echo
-          run: | 
-            echo ${{ secrets.AZURE_CLIENT_ID }}
-            echo ${{ secrets.AZURE_TENANT_ID }}
-            echo ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
         - name: 'Az Cli Login'
           uses: azure/login@v1
           with:

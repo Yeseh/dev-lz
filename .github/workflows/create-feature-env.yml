@@ -43,7 +43,7 @@ jobs:
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
             $envName = $branch.Replace("/", "_").Replace("-", "")
-            $params = "`"$(@{"slug" = "$envName" } | ConvertTo-Json -Depth 2).replace('"', '\"')`""
+            $params = "`" $((@{"slug" = "$envName" } | ConvertTo-Json -Depth 2).replace('"', '\"'))`""
             $params
             $existing = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
             if ($null -eq $existing) {

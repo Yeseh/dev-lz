@@ -41,7 +41,7 @@ jobs:
           shell: pwsh
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
-            $envName $branch.Replace("/", "_")
+            $envName = $branch.Replace("/", "_")
             $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name test | ConvertFrom-Json)
             if ($null -eq $output) {
                 Write-Host "Environment for branch $branch not found, creating..."

@@ -48,7 +48,7 @@ jobs:
             $existing = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
             if ($null -eq $existing) {
                 Write-Host "Environment for branch $branch not found, creating..."
-                az devcenter dev environment create --catalog-name ${{ env.CATALOG }} --environment-type ${{ env.ENVTYPE }} --parameters $params --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition-name ${{ env.ENVDEF }} --name $envName
+                echo "az devcenter dev environment create --catalog-name ${{ env.CATALOG }} --environment-type ${{ env.ENVTYPE }} --parameters $params --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition-name ${{ env.ENVDEF }} --name $envName"
             } else {
                 Write-Host "Environment for branch $branch already exists..."
             }

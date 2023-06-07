@@ -11,7 +11,7 @@ $appNameBase = 'DevLandingZone-GithubActions'
 $subscriptionId = (Get-AzContext).Subscription.Id
 $tenantId = (Get-AzContext).Tenant.Id
 $audience = 'api://AzureADTokenExchange'
-$issuer = 'https://token.actions.githubusercontent.com/'
+$issuer = 'https://token.actions.githubusercontent.com'
 $scope = "/subscriptions/$subscriptionId"
 
 $envs = @("dev", "prod")

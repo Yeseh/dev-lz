@@ -4,6 +4,10 @@ on:
         branches:
             - feature/*
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
     DEVCENTER: 'dc-devlz'
     CATALOG: 'Catalog-devlz'

@@ -1,9 +1,28 @@
+DEVCENTER = dc-devlz
+PROJECT = project-devlz
+RG = rg-devlz
+
 .PHONY: build-all
-build-all: build-dc
+build-all: build-demo1
+
+build-demo1:
+	cd "catalog/demo1" && az bicep build -f main.bicep --outfile azuredeploy.json --mode complete
 
 .PHONY: deploy-dc
 deploy-dc:
-	az deployment sub create -l westeurope -f deployments\dev-center\main.bicep -p deployments\dev-center\parameters.json
+	az deployment sub create -l westeurope -f deployments\dev-center\main.bicep -p deployments\dev-center\parameters.json 
+
+.PHONY: whatif-dc
+whatif-dc:
+	az deployment sub create -l westeurope -f deployments\dev-center\main.bicep -p deployments\dev-center\parameters.json --what-if
+
+.PHONY: list-catalog-items
+list-catalog-items:
+	az devcenter dev catalog-item list --devcenter $(DEVCENTER) --project $(PROJECT) -o table
+
+.PHONY: list-environment-types
+list-environment-types:
+	az devcenter dev environment-type list --dev-center $(DEVCENTER) --project-name $(PROJECT) -o table
 
 new-catalog-item:
 	mkdir "catalog/new-catalog-item"

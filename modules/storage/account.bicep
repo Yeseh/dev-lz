@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 @description('The Azure resource location.')
 param location string
 
-@allowed(['tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'tst', 'acc', 'prd'])
 @description('The environment this module is deployed to.')
 param environment string
 
@@ -44,7 +44,7 @@ var saSubnetRules = map(range(0, length(subnetIds)), i => {
 })
 
 var isTestEnvironment = environment == 'tst' || environment == 'dev'
-var storageAccountName = toLower('sa${slug}${environment}')
+var storageAccountName = toLower(empty(environment) ? 'sa${slug}' : 'sa${slug}${environment}')
 var privateEndpointName = 'pep-${storageAccountName}'
 var secretName = '${storageAccountName}-access-key'
 
@@ -117,7 +117,7 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   }
 }]
 
-module keyVaultSecret './keyvault/keyVaultSecret.bicep' = {
+module keyVaultSecret '../keyvault/secret.bicep' = {
   name: secretName
   scope: resourceGroup(keyVaultResourceGroup)
   params: {
@@ -204,14 +204,6 @@ resource saPep 'Microsoft.Network/privateEndpoints@2022-05-01' = if (!empty(priv
         }
       ]
     }
-  }
-}
-
-resource saDeleteLock 'Microsoft.Authorization/locks@2020-05-01' = if (!isTestEnvironment) {
-  name: 'CanNotDelete-${storageAccountName}'
-  scope: storageaccount
-  properties: {
-    level: 'CanNotDelete'
   }
 }
 

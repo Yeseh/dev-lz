@@ -23,7 +23,7 @@ module kv '../../modules/keyvault/keyvault.bicep' = {
   }
 }
 
-module sa '../../modules/storageAccount.bicep' = {
+module sa '../../modules/storage/account.bicep' = {
   name: 'sadevlzdemo1' 
   params: {
     containerNames: ['dev']

@@ -1,9 +1,12 @@
-@allowed(['dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'tst', 'acc', 'prd'])
 @description('The environment this module is deployed to.')
 param environment string
 
 @description('The Azure resource location.')
 param location string
+
+@description('Shorthand name for making resource names')
+param slug string
 
 @description('The ID of the network security group.')
 param networkSecurityGroupId string
@@ -23,8 +26,10 @@ param dnsZones array = [
   'privatelink${az.environment().suffixes.keyvaultDns}'
 ]
 
+var vnetName = empty(environment)? 'vnet-${slug}' : 'vnet-${slug}-${environment}'
+
 resource vnet 'Microsoft.Network/virtualNetworks@2022-05-01' = {
-  name: 'vnet-kb-lra-${environment}'
+  name: vnetName 
   location: location
   properties: {
     addressSpace: {
@@ -37,6 +42,7 @@ module defaultSnet './subnet.bicep' = {
   name: 'defaultsnet-${vnet.name}'
   params: {
     vnetName: vnet.name
+    subnetName: 'default'
     location: location
     addressPrefix: subnetAddressPrefix
     networkSecurityGroupId: networkSecurityGroupId
@@ -45,7 +51,6 @@ module defaultSnet './subnet.bicep' = {
       'Microsoft.Storage'
       'Microsoft.KeyVault'
     ]
-    subnetName: 'default'
   }
 }
 

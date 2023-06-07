@@ -1,0 +1,20 @@
+name: new-catalog-item
+version: 1.0.0
+summary: Demo application 
+description: Demo application
+runner: ARM
+templatePath: azuredeploy.json
+parameters:
+  - id: environment
+    name: environment
+    type: "string"
+    required: true
+  - id: slug
+    name: slug
+    type: "string"
+    required: true
+  - id: location
+    name: location
+    type: "string"
+    required: true
+

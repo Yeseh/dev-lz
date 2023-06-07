@@ -7,7 +7,7 @@ type principalArray = {
 
 @description('The name of the key vault to assign the role to')
 param kvName string
-@description('Array of objects containing the id and type (User|ServicePrincipal|Group) of the service principal to assign the role to')
+@description('Array of objects containing the id and type of the service principal to assign the role to')
 param secretsOfficers principalArray = []
 param secretsUsers principalArray = []
 param certificateOfficers principalArray = []
@@ -22,7 +22,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: kvName 
 }
 
-module officers '../roleAssignments/resourceGroupAssignment.bicep' = {
+module officers '../roleAssignments/resourceGroupAssignments.bicep' = {
   name: 'keyVaultSecretsOfficers-${keyVault.name}'
   params: {
     roleDefinitionId: keyVaultSecretsOfficer
@@ -30,7 +30,7 @@ module officers '../roleAssignments/resourceGroupAssignment.bicep' = {
   }
 }
 
-module secretUsers '../roleAssignments/resourceGroupAssignment.bicep' = {
+module secretUsers '../roleAssignments/resourceGroupAssignments.bicep' = {
   name: 'keyVaultSecretUsers-${kvName}'
   params: {
     roleDefinitionId: keyVaultSecretsUser 
@@ -38,15 +38,15 @@ module secretUsers '../roleAssignments/resourceGroupAssignment.bicep' = {
   }
 }
 
-module certOfficers '../roleAssignments/resourceGroupAssignment.bicep' = {
-  name: 'keyVaultSecretUsers-${kvName}'
+module certOfficers '../roleAssignments/resourceGroupAssignments.bicep' = {
+  name: 'keyVaultCertificateOfficers-${kvName}'
   params: {
     roleDefinitionId: keyVaultCertificateOfficer 
     principals: certificateOfficers 
   }
 }
 
-module admins '../roleAssignments/resourceGroupAssignment.bicep' = {
+module admins '../roleAssignments/resourceGroupAssignments.bicep' = {
   name: 'keyVaultAdministrators-${kvName}'
   params: {
     roleDefinitionId: keyVaultAdministrator 

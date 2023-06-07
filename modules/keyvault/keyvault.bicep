@@ -7,9 +7,9 @@ param location string = resourceGroup().location
 @description('Small identifier for the project, used to build resource names.')
 param slug string
 
-@allowed(['dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'tst', 'acc', 'prd'])
 @description('The environment this module is deployed to.')
-param environment string
+param environment string = ''
 
 @description('The Log Analytics Workspace ID to send keyvault logs to.')
 param logAnalyticsWorkspaceId string
@@ -26,6 +26,8 @@ param privateEndpointSubnetId string = ''
 @description('The ID of the private DNS zone.')
 param privateDnsZoneId string = ''
 
+param allowPublicAccess bool = false
+
 var kvIpRules = map(range(0, length(whitelistIps)), i => {
   value: '${whitelistIps[i]}'
 })
@@ -34,7 +36,7 @@ var kvSubnetRules = map(range(0, length(subnetIds)), i => {
   id: '${subnetIds[i]}'
 })
 
-var kvName = 'kv-${slug}-${environment}'
+var kvName = empty(environment) ? 'kv-${slug}' : 'kv-${slug}-${environment}'
 var privateEndpointName = 'pep-${kvName}'
 
 resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
@@ -51,7 +53,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
       family: 'A'
     }
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: allowPublicAccess ? 'Allow' : 'Deny'
       virtualNetworkRules: kvSubnetRules 
       ipRules: kvIpRules
     }
@@ -68,6 +70,10 @@ resource keyVaultDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview'
     logs: [
       {
         categoryGroup: 'allLogs'
+        enabled: true
+      }
+      {
+        categoryGroup: 'audit'
         enabled: true
       }
     ]
@@ -118,3 +124,4 @@ resource keyvaultPdnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZon
 }
 
 output name string = keyVault.name
+output vaultUri string = keyVault.properties.vaultUri

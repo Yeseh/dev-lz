@@ -6,11 +6,11 @@ param location string = resourceGroup().location
 
 param slug string
 
-@allowed(['dev', 'tst', 'acc', 'prd'])
+@allowed(['', 'dev', 'tst', 'acc', 'prd'])
 @description('The environment this module is deployed to.')
 param environment string
 
-var lawsName = 'laws-${slug}-${environment}'
+var lawsName = empty(environment) ? 'laws-${slug}' : 'laws-${slug}-${environment}'
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: lawsName 

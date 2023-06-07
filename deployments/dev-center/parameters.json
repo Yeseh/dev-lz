@@ -6,10 +6,16 @@
       "value": "devlz"
     },
     "environment":{
-      "value": "dev"
+      "value": ""
     },
     "location":{
       "value": "westeurope"
+    },
+    "ipWhitelist": {
+      "value": ["37.17.208.21"]
+    },
+    "catalogRepoUrl": {
+      "value": "https://github.com/Yeseh/dev-lz.git"
     }
   }
 }

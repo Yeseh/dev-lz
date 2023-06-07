@@ -1,4 +1,4 @@
-name: Sync DevCenter catalog
+name: Create Feature Environment
 on: 
     push:
         branches:
@@ -9,11 +9,11 @@ permissions:
   contents: read
 
 env:
-    DEVCENTER: 'dc-devlz'
-    CATALOG: 'Catalog-devlz'
-    PROJECT: 'project-devlz'
-    RG: 'rg-devlz'
-    ENVDEF: 'dotnet-function-app'
+    DEVCENTER: dc-devlz
+    CATALOG: Catalog-devlz
+    PROJECT: project-devlz
+    RG: rg-devlz
+    ENVDEF: dotnet-function-app
     ENVTYPE: dev
 
 jobs:
@@ -38,12 +38,12 @@ jobs:
         - name: Check Branch Name 
           run: echo ${{ steps.vars.outputs.branch }}
         
-        - name: 'Create Feature environment if not exists'
+        - name: 'Create feature environment if not exists'
           shell: pwsh
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
-            $envName = $branch.Replace("/", "_")
-            $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name test | ConvertFrom-Json)
+            $envName = $branch.Replace("/", "").Replace("-", "")
+            $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
             if ($null -eq $output) {
                 Write-Host "Environment for branch $branch not found, creating..."
                 az devcenter dev environment create --environment-name $envName --environment-type ${{ env.ENVTYPE }} --catalog-name ${{ env.CATALOG }} --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition ${{ env.ENVDEF }} 

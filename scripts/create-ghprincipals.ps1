@@ -60,11 +60,6 @@ foreach ($env in $envs) {
         Write-Host "Creating role assignment for $appName. Id: $($sp.Id) Scope: $scope"
         az role assignment create --assignee-object-id $sp.Id --role Owner --scope $scope --assignee-principal-type ServicePrincipal
     }
-
 }
-
-
-$clientId = $app.AppId
-
 
 

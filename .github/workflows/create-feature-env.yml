@@ -19,7 +19,7 @@ env:
 jobs:
     create-feature-environment:
         runs-on: ubuntu-latest
-        environment: prod
+        environment: dev
         steps:
         - name: 'Az Cli Login'
           uses: azure/login@v1
@@ -42,11 +42,13 @@ jobs:
           shell: pwsh
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
-            $envName = $branch.Replace("/", "").Replace("-", "")
-            $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
-            if ($null -eq $output) {
+            $envName = $branch.Replace("/", "_").Replace("-", "")
+            $params = "`"$(@{"slug" = "$envName" } | ConvertTo-Json -Depth 2).replace('"', '\"')`""
+            $params
+            $existing = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
+            if ($null -eq $existing) {
                 Write-Host "Environment for branch $branch not found, creating..."
-                az devcenter dev environment create --environment-name $envName --environment-type ${{ env.ENVTYPE }} --catalog-name ${{ env.CATALOG }} --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition ${{ env.ENVDEF }} 
+                az devcenter dev environment create --catalog-name ${{ env.CATALOG }} --environment-type ${{ env.ENVTYPE }} --parameters $params --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition-name ${{ env.ENVDEF }} --name $envName
             } else {
                 Write-Host "Environment for branch $branch already exists..."
             }

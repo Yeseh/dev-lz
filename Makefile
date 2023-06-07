@@ -1,6 +1,7 @@
 DEVCENTER = dc-devlz
 PROJECT = project-devlz
 RG = rg-devlz
+CATALOG = Catalog-devlz
 
 .PHONY: build-all
 build-all: build-demo1

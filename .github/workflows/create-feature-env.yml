@@ -1,19 +1,25 @@
-name: Sync DevCenter catalog
+name: Create Feature Environment
 on: 
     push:
         branches:
-            - feature/*
+            - feat/*
+
+permissions:
+  id-token: write
+  contents: read
 
 env:
-    DEVCENTER: 'dc-devlz'
-    CATALOG: 'Catalog-devlz'
-    PROJECT: 'project-devlz'
-    RG: 'rg-devlz'
-    ENVDEF: 'dotnet-function-app'
+    DEVCENTER: dc-devlz
+    CATALOG: Catalog-devlz
+    PROJECT: project-devlz
+    RG: rg-devlz
+    ENVDEF: dotnet-function-app
+    ENVTYPE: dev
 
 jobs:
     create-feature-environment:
         runs-on: ubuntu-latest
+        environment: dev
         steps:
         - name: 'Az Cli Login'
           uses: azure/login@v1
@@ -27,20 +33,24 @@ jobs:
 
         - name: Set Branch Name 
           id: vars
-          run: echo ::set-output name=branch::${GITHUB_REF#refs/*/}
+          run: echo "branch=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
         - name: Check Branch Name 
           run: echo ${{ steps.vars.outputs.branch }}
         
-        - name: 'Create Feature environment if not exists'
+        - name: 'Create feature environment if not exists'
           shell: pwsh
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
-            $envName $branch.Replace("/", "_")
-            $output = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name test | ConvertFrom-Json)
-            if ($null -eq $output) {
+            $envName = $branch.Replace("/", "_").Replace("-", "")
+            $slug = $envName.Replace("feature-", "")
+            $data = @{"slug" = "$slug" } | ConvertTo-Json -Depth 2
+            $params = $data.replace('"', '""').replace("`n", '')
+            $params
+            $existing = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
+            if ($null -eq $existing) {
                 Write-Host "Environment for branch $branch not found, creating..."
-                az devcenter dev environment create --environment-name $envName --catalog-name ${{ env.CATALOG }} --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition ${{ env.ENVDEF }} 
+                az devcenter dev environment create --catalog-name '${{ env.CATALOG }}' --environment-type '${{ env.ENVTYPE }}' --parameters "$params" --dev-center '${{ env.DEVCENTER }}' --project '${{ env.PROJECT }}' --environment-definition-name '${{ env.ENVDEF }}' --name "$envName"
             } else {
                 Write-Host "Environment for branch $branch already exists..."
             }

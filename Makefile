@@ -3,7 +3,7 @@ PROJECT = project-devlz
 RG = rg-devlz
 CATALOG = Catalog-devlz
 ENVDEF = dotnet-function-app
-ENVNAME = fnappdcdemo1
+ENVNAME = featuretestwf 
 
 build-catalog: build-dotnet-function-app
 
@@ -36,7 +36,7 @@ create-env:
 
 .PHONY: delete-env
 delete-env:
-	az devcenter dev environment delete --catalog-name $(CATALOG)  --dev-center $(DEVCENTER)  --project $(PROJECT) --environment-type dev --environment-name $(ENVNAME) --environment-definition-name $(ENVDEF)
+	az devcenter dev environment delete --dev-center $(DEVCENTER)  --project $(PROJECT) --environment-name $(ENVNAME)
 
 new-catalog-item:
 	mkdir "catalog/new-catalog-item"

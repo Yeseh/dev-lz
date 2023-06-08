@@ -3,6 +3,7 @@
 param environment string = ''
 param location string = resourceGroup().location
 param slug string
+@allowed(['linux', 'windows'])
 param kind string = 'linux'
 param sku object = {name: 'B1', tier: 'Basic'}
 

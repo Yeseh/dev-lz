@@ -12,13 +12,23 @@ param logAnalyticsWorkspaceId string
 param appServicePlanId string
 @allowed(['', 'dev', 'acc', 'test', 'prod'])
 @description('The environment this module is deployed to.')
-param environment string
-param alwaysOn bool = false
-param enablePublicNetworkAccess bool = false
-param appSettings object = {}
-param azureAdB2cSettings object = {}
-param azureAdSettings object = {}
+param environment string = ''
+@allowed(['DOTNETCORE|6.0', 'Node|18', 'Python|3.10', 'Java|17', 'custom'])
 param linuxFxVersion string = 'DOTNETCORE|6.0'
+@allowed(['DOTNETCORE|6.0', 'Node|18', 'Python|3.10', 'Java|17', 'custom'])
+param windowsFxVersion string = 'DOTNETCORE|6.0'
+@allowed(['linux', 'windows'])
+param kind string = 'linux'
+@description('Always on')
+param alwaysOn bool = false
+@description('Enable public network access')
+param enablePublicNetworkAccess bool = false
+@description('App settings to configure the function app with')
+param appSettings object = {}
+@description('Azure AD B2C settings to configure the function app with')
+param azureAdB2cSettings object = {}
+@description('Azure AD settings to configure the function app with')
+param azureAdSettings object = {}
 
 var webApiName = empty(environment) ? 'app-${slug}' : 'app-${slug}-${environment}'
 
@@ -31,6 +41,7 @@ var azureAdB2cConfigs = map(items(azureAdB2cSettings), i => {
   name: 'AzureAdB2C__${i.key}'
   value: i.value 
 })
+
 var azureAdConfigs = map(items(azureAdSettings), i => {
   name: 'AzureAd__${i.key}'
   value: i.value 
@@ -79,12 +90,12 @@ var baseWebApiConfig = [
   }
 ]
 
-var webapiConfig = concat(baseWebApiConfig, appSettingsConfigs, azureAdB2cConfigs, azureAdConfigs)
+var appServiceConfig = concat(baseWebApiConfig, appSettingsConfigs, azureAdB2cConfigs, azureAdConfigs)
 
-resource webapi 'Microsoft.Web/sites@2022-03-01' = {
+resource appService 'Microsoft.Web/sites@2022-03-01' = {
   name: webApiName 
   location: location
-  kind: 'linux'
+  kind: kind
   identity: {
     type: 'SystemAssigned'
   }
@@ -93,15 +104,16 @@ resource webapi 'Microsoft.Web/sites@2022-03-01' = {
     serverFarmId: appServicePlanId
     siteConfig: {
       linuxFxVersion: linuxFxVersion 
+      windowsFxVersion: windowsFxVersion
       alwaysOn: alwaysOn 
-      appSettings: webapiConfig
+      appSettings: appServiceConfig
     }
     httpsOnly: true
   }
 }
 
-resource webApi_virtualnetwork 'Microsoft.Web/sites/networkConfig@2022-03-01' = {
-  parent: webapi 
+resource appServiceVirtualNetwork 'Microsoft.Web/sites/networkConfig@2022-03-01' = {
+  parent: appService 
   name: 'virtualNetwork'
   properties: {
     subnetResourceId: integrationSnetId 
@@ -109,9 +121,9 @@ resource webApi_virtualnetwork 'Microsoft.Web/sites/networkConfig@2022-03-01' = 
   }
 }
 
-resource webApiDiag  'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'webAPiDiag'
-  scope: webapi 
+resource appServiceDiag  'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'appServieDiag-${webApiName}}'
+  scope: appService 
   properties: {
     logs: [
       {
@@ -133,6 +145,7 @@ resource webApiDiag  'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
   }
 }
 
-output appServcieManagedIdentityPrincipalId string = webapi.identity.principalId
+output appServiceManagedIdentityPrincipalId string = appService.identity.principalId
+output appServiceUrl string = appService.properties.defaultHostName
 
 

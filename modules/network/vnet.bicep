@@ -67,7 +67,7 @@ resource pdnsVnetLinks 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@20
   location: 'global' 
   parent: privateDnsZones[i] 
   properties: {
-    registrationEnabled: true
+    registrationEnabled: false 
     virtualNetwork: {
       id: vnet.id
     }

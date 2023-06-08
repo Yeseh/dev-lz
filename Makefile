@@ -3,7 +3,7 @@ PROJECT = project-devlz
 RG = rg-devlz
 CATALOG = Catalog-devlz
 ENVDEF = dotnet-function-app
-ENVNAME = fnappdcdemo1
+ENVNAME = featuretestwf 
 
 build-catalog: build-dotnet-function-app
 

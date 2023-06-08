@@ -2,7 +2,7 @@ name: Create Feature Environment
 on: 
     push:
         branches:
-            - feature/*
+            - feat/*
 
 permissions:
   id-token: write
@@ -43,12 +43,14 @@ jobs:
           run: |
             $branch = '${{ steps.vars.outputs.branch }}'
             $envName = $branch.Replace("/", "_").Replace("-", "")
-            $params = "`" $((@{"slug" = "$envName" } | ConvertTo-Json -Depth 2).replace('"', '\"'))`""
+            $slug = $envName.Replace("feature-", "")
+            $data = @{"slug" = "$slug" } | ConvertTo-Json -Depth 2
+            $params = $data.replace('"', '""').replace("`n", '')
             $params
             $existing = $(az devcenter dev environment show --dev-center dc-devlz --project project-devlz --name $envName | ConvertFrom-Json)
             if ($null -eq $existing) {
                 Write-Host "Environment for branch $branch not found, creating..."
-                echo "az devcenter dev environment create --catalog-name ${{ env.CATALOG }} --environment-type ${{ env.ENVTYPE }} --parameters $params --dev-center ${{ env.DEVCENTER }} --project ${{ env.PROJECT }} --environment-definition-name ${{ env.ENVDEF }} --name $envName"
+                az devcenter dev environment create --catalog-name '${{ env.CATALOG }}' --environment-type '${{ env.ENVTYPE }}' --parameters "$params" --dev-center '${{ env.DEVCENTER }}' --project '${{ env.PROJECT }}' --environment-definition-name '${{ env.ENVDEF }}' --name "$envName"
             } else {
                 Write-Host "Environment for branch $branch already exists..."
             }

@@ -7,7 +7,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "8988716848221144945"
+      "templateHash": "15405067265643825935"
     }
   },
   "parameters": {
@@ -21,13 +21,423 @@
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]"
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.144.0.0/20"
     }
   },
+  "variables": {
+    "subnetAddressPrefix": "[cidrSubnet(parameters('vnetAddressPrefix'), 24, 0)]"
+  },
   "resources": {
+    "nsg": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('nsg-{0}-{1}', parameters('slug'), parameters('environment'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "slug": {
+            "value": "[parameters('slug')]"
+          },
+          "whitelistIps": {
+            "value": []
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "1.10-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+            "_generator": {
+              "name": "bicep",
+              "version": "0.17.1.54307",
+              "templateHash": "10431210573992308911"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The Azure resource location."
+              }
+            },
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "The environment this module is deployed to."
+              },
+              "allowedValues": [
+                "",
+                "dev",
+                "test",
+                "prod"
+              ]
+            },
+            "whitelistIps": {
+              "type": "array",
+              "metadata": {
+                "description": "The IP addresses that are allowed access."
+              }
+            },
+            "slug": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "nsgName": "[if(empty(parameters('environment')), format('nsg-{0}', parameters('slug')), format('nsg-{0}-{1}', parameters('slug'), parameters('environment')))]",
+            "nsgRules": "[map(range(0, length(parameters('whitelistIps'))), lambda('i', createObject('name', format('Allow-{0}-Inbound', parameters('whitelistIps')[lambdaVariables('i')]), 'properties', createObject('access', 'Allow', 'destinationAddressPrefix', 'VirtualNetwork', 'destinationPortRange', '*', 'direction', 'Inbound', 'priority', add(200, lambdaVariables('i')), 'protocol', '*', 'sourceAddressPrefix', parameters('whitelistIps')[lambdaVariables('i')], 'sourcePortRange', '*'))))]"
+          },
+          "resources": {
+            "nsg": {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2022-05-01",
+              "name": "[variables('nsgName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": "[variables('nsgRules')]"
+              }
+            }
+          },
+          "outputs": {
+            "nsgId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+            },
+            "nsgName": {
+              "type": "string",
+              "value": "[variables('nsgName')]"
+            }
+          }
+        }
+      }
+    },
+    "vnet": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('vnet-{0}-{1}', parameters('slug'), parameters('environment'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "environment": {
+            "value": "[parameters('environment')]"
+          },
+          "slug": {
+            "value": "[parameters('slug')]"
+          },
+          "networkSecurityGroupId": {
+            "value": "[reference('nsg').outputs.nsgId.value]"
+          },
+          "subnetAddressPrefix": {
+            "value": "[variables('subnetAddressPrefix')]"
+          },
+          "vnetAddressPrefixes": {
+            "value": [
+              "[parameters('vnetAddressPrefix')]"
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "1.10-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+            "_generator": {
+              "name": "bicep",
+              "version": "0.17.1.54307",
+              "templateHash": "5020305178884063203"
+            }
+          },
+          "parameters": {
+            "environment": {
+              "type": "string",
+              "metadata": {
+                "description": "The environment this module is deployed to."
+              },
+              "allowedValues": [
+                "",
+                "dev",
+                "test",
+                "acc",
+                "prod"
+              ]
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The Azure resource location."
+              }
+            },
+            "slug": {
+              "type": "string",
+              "metadata": {
+                "description": "Shorthand name for making resource names"
+              }
+            },
+            "networkSecurityGroupId": {
+              "type": "string",
+              "metadata": {
+                "description": "The ID of the network security group."
+              }
+            },
+            "vnetAddressPrefixes": {
+              "type": "array",
+              "metadata": {
+                "description": "The prefixes for the VNET IP address."
+              }
+            },
+            "subnetAddressPrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "The prefix for the default subnet IP addresses."
+              }
+            },
+            "dnsZones": {
+              "type": "array",
+              "defaultValue": [
+                "[format('privatelink.blob.{0}', environment().suffixes.storage)]",
+                "[format('privatelink.file.{0}', environment().suffixes.storage)]",
+                "[format('privatelink.queue.{0}', environment().suffixes.storage)]",
+                "[format('privatelink.table.{0}', environment().suffixes.storage)]",
+                "[format('privatelink{0}', environment().suffixes.keyvaultDns)]"
+              ],
+              "metadata": {
+                "description": "The DNS zones."
+              }
+            }
+          },
+          "variables": {
+            "vnetName": "[if(empty(parameters('environment')), format('vnet-{0}', parameters('slug')), format('vnet-{0}-{1}', parameters('slug'), parameters('environment')))]"
+          },
+          "resources": {
+            "vnet": {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2022-05-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": "[parameters('vnetAddressPrefixes')]"
+                }
+              }
+            },
+            "privateDnsZones": {
+              "copy": {
+                "name": "privateDnsZones",
+                "count": "[length(parameters('dnsZones'))]"
+              },
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2020-06-01",
+              "name": "[parameters('dnsZones')[copyIndex()]]",
+              "location": "global",
+              "dependsOn": [
+                "vnet"
+              ]
+            },
+            "pdnsVnetLinks": {
+              "copy": {
+                "name": "pdnsVnetLinks",
+                "count": "[length(parameters('dnsZones'))]"
+              },
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}/{1}', parameters('dnsZones')[copyIndex()], last(split(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '/')))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": true,
+                "virtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+                }
+              },
+              "dependsOn": [
+                "[format('privateDnsZones[{0}]', copyIndex())]",
+                "vnet"
+              ]
+            },
+            "defaultSnet": {
+              "type": "Microsoft.Resources/deployments",
+              "apiVersion": "2022-09-01",
+              "name": "[format('defaultsnet-{0}', variables('vnetName'))]",
+              "properties": {
+                "expressionEvaluationOptions": {
+                  "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                  "vnetName": {
+                    "value": "[variables('vnetName')]"
+                  },
+                  "subnetName": {
+                    "value": "default"
+                  },
+                  "location": {
+                    "value": "[parameters('location')]"
+                  },
+                  "addressPrefix": {
+                    "value": "[parameters('subnetAddressPrefix')]"
+                  },
+                  "networkSecurityGroupId": {
+                    "value": "[parameters('networkSecurityGroupId')]"
+                  },
+                  "enablePrivateEndpointNetworkPolicies": {
+                    "value": true
+                  },
+                  "serviceEndpointServices": {
+                    "value": [
+                      "Microsoft.Storage",
+                      "Microsoft.KeyVault"
+                    ]
+                  }
+                },
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "languageVersion": "1.10-experimental",
+                  "contentVersion": "1.0.0.0",
+                  "metadata": {
+                    "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+                    "_generator": {
+                      "name": "bicep",
+                      "version": "0.17.1.54307",
+                      "templateHash": "2372966553005701899"
+                    }
+                  },
+                  "parameters": {
+                    "vnetName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "VNet to create the subnet in"
+                      }
+                    },
+                    "location": {
+                      "type": "string",
+                      "defaultValue": "[resourceGroup().location]",
+                      "metadata": {
+                        "description": "The azure location for service endpoints"
+                      }
+                    },
+                    "delegationService": {
+                      "type": "string",
+                      "defaultValue": "",
+                      "metadata": {
+                        "description": "The name of the service the subnet should be delegated to."
+                      }
+                    },
+                    "serviceEndpointServices": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "defaultValue": [],
+                      "metadata": {
+                        "description": "Serivce endpoints to enable on the subnet."
+                      }
+                    },
+                    "subnetName": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Name of the subnet"
+                      }
+                    },
+                    "networkSecurityGroupId": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Network security group ID to link to the vnet"
+                      }
+                    },
+                    "addressPrefix": {
+                      "type": "string",
+                      "metadata": {
+                        "description": "Address prefix for the subnet"
+                      }
+                    },
+                    "enablePrivateEndpointNetworkPolicies": {
+                      "type": "bool",
+                      "defaultValue": false
+                    }
+                  },
+                  "variables": {
+                    "serviceEndpoints": "[map(parameters('serviceEndpointServices'), lambda('endpoint', createObject('locations', createArray(parameters('location')), 'service', lambdaVariables('endpoint'))))]",
+                    "delegations": "[if(not(equals(parameters('delegationService'), '')), createArray(createObject('name', replace(parameters('delegationService'), '/', '_'), 'properties', createObject('serviceName', parameters('delegationService')))), createArray())]"
+                  },
+                  "resources": {
+                    "vnet": {
+                      "type": "Microsoft.Network/virtualNetworks",
+                      "apiVersion": "2022-11-01",
+                      "name": "[parameters('vnetName')]"
+                    },
+                    "snet": {
+                      "type": "Microsoft.Network/virtualNetworks/subnets",
+                      "apiVersion": "2022-11-01",
+                      "name": "[format('{0}/{1}', parameters('vnetName'), parameters('subnetName'))]",
+                      "properties": {
+                        "privateEndpointNetworkPolicies": "[if(parameters('enablePrivateEndpointNetworkPolicies'), 'Enabled', 'Disabled')]",
+                        "networkSecurityGroup": {
+                          "id": "[parameters('networkSecurityGroupId')]"
+                        },
+                        "addressPrefix": "[parameters('addressPrefix')]",
+                        "serviceEndpoints": "[variables('serviceEndpoints')]",
+                        "delegations": "[variables('delegations')]"
+                      },
+                      "dependsOn": [
+                        "vnet"
+                      ]
+                    }
+                  },
+                  "outputs": {
+                    "snetId": {
+                      "type": "string",
+                      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "vnet"
+              ]
+            }
+          },
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "vnetName": {
+              "type": "string",
+              "value": "[variables('vnetName')]"
+            },
+            "defaultSnetId": {
+              "type": "string",
+              "value": "[reference('defaultSnet').outputs.snetId.value]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "nsg"
+      ]
+    },
     "law": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "name": "lawdevlzdemo1",
+      "name": "[format('law-{0}-{1}', parameters('slug'), parameters('environment'))]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -117,7 +527,7 @@
     "kv": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "name": "kvdevlzdemo1",
+      "name": "[format('kv-{0}-{1}', parameters('slug'), parameters('environment'))]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -339,41 +749,24 @@
         "law"
       ]
     },
-    "sa": {
+    "asp": {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "name": "sadevlzdemo1",
+      "name": "[format('asp-{0}-{1}', parameters('slug'), parameters('environment'))]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
         },
         "mode": "Incremental",
         "parameters": {
-          "containerNames": {
-            "value": [
-              "dev"
-            ]
-          },
-          "environment": {
-            "value": "[parameters('environment')]"
-          },
-          "keyVaultName": {
-            "value": "[reference('kv').outputs.name.value]"
-          },
-          "keyVaultResourceGroup": {
-            "value": "[resourceGroup().name]"
-          },
           "location": {
             "value": "[parameters('location')]"
-          },
-          "logAnalyticsWorkspaceId": {
-            "value": "[reference('law').outputs.workspaceId.value]"
           },
           "slug": {
             "value": "[parameters('slug')]"
           },
-          "whitelistIps": {
-            "value": []
+          "environment": {
+            "value": "[parameters('environment')]"
           }
         },
         "template": {
@@ -385,360 +778,368 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "4721173615582677338"
+              "templateHash": "18404952992579296718"
             }
           },
           "parameters": {
-            "location": {
-              "type": "string",
-              "metadata": {
-                "description": "The Azure resource location."
-              }
-            },
             "environment": {
               "type": "string",
+              "defaultValue": "",
               "metadata": {
                 "description": "The environment this module is deployed to."
               },
               "allowedValues": [
                 "",
-                "dev",
                 "test",
                 "acc",
+                "dev",
                 "prod"
               ]
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "slug": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "defaultValue": "linux",
+              "allowedValues": [
+                "linux",
+                "windows"
+              ]
+            },
+            "sku": {
+              "type": "object",
+              "defaultValue": {
+                "name": "B1",
+                "tier": "Basic"
+              }
+            }
+          },
+          "variables": {
+            "aspName": "[if(empty(parameters('environment')), format('asp-{0}', parameters('slug')), format('asp-{0}-{1}', parameters('slug'), parameters('environment')))]"
+          },
+          "resources": {
+            "asp": {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2022-03-01",
+              "name": "[variables('aspName')]",
+              "location": "[parameters('location')]",
+              "kind": "[parameters('kind')]",
+              "properties": {
+                "reserved": "[equals(parameters('kind'), 'linux')]"
+              },
+              "sku": "[parameters('sku')]"
+            }
+          },
+          "outputs": {
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/serverfarms', variables('aspName'))]"
+            }
+          }
+        }
+      }
+    },
+    "fnApp": {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('fn-{0}-{1}', parameters('slug'), parameters('environment'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "appServicePlanId": {
+            "value": "[reference('asp').outputs.id.value]"
+          },
+          "env": {
+            "value": "[parameters('environment')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference('law').outputs.workspaceId.value]"
+          },
+          "slug": {
+            "value": "[parameters('slug')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "languageVersion": "1.10-experimental",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+            "_generator": {
+              "name": "bicep",
+              "version": "0.17.1.54307",
+              "templateHash": "6192269731881409650"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Azure location to deploy the resources to"
+              }
             },
             "logAnalyticsWorkspaceId": {
               "type": "string",
               "metadata": {
-                "description": "The ID of the Log Analytics Workspace, to send diagnostics to."
+                "description": "The resource ID of the log analytics workspace to stream function logs to"
               }
             },
-            "whitelistIps": {
-              "type": "array",
+            "appServicePlanId": {
+              "type": "string",
               "metadata": {
-                "description": "The IP addresses allowed to access this storage account."
+                "description": "The resource ID of the app service plan to use"
               }
             },
             "slug": {
               "type": "string",
               "metadata": {
-                "description": "Small identifier for the project, used to build resource names."
+                "description": "The name of the function app, without prefixes"
               }
             },
-            "containerNames": {
-              "type": "array",
-              "metadata": {
-                "description": "An array of containers that need to be created."
-              }
-            },
-            "keyVaultName": {
+            "env": {
               "type": "string",
               "metadata": {
-                "description": "The Key Vault name where the storage account access key will be stored."
-              }
+                "description": "The environment this module is deployed to."
+              },
+              "allowedValues": [
+                "dev",
+                "prd"
+              ]
             },
-            "keyVaultResourceGroup": {
-              "type": "string",
-              "metadata": {
-                "description": "The name of the resource group the Key Vault is in."
-              }
-            },
-            "subnetIds": {
-              "type": "array",
-              "defaultValue": [],
-              "metadata": {
-                "description": "The IDs of the subnets this storage account is connected to."
-              }
-            },
-            "privateEndpointSubnetId": {
+            "delegationSubnetId": {
               "type": "string",
               "defaultValue": "",
               "metadata": {
-                "description": "The ID of the subnet to place the KV private endpoint in. If empty, no private endpoint will be created."
+                "description": "ID of the subnet to delegate to the function app"
               }
             },
-            "privateDnsZoneId": {
+            "functionWorkerRuntime": {
               "type": "string",
-              "defaultValue": "",
+              "defaultValue": "dotnet",
+              "allowedValues": [
+                "dotnet",
+                "dotnet-isolated",
+                "node",
+                "python",
+                "java",
+                "custom"
+              ],
               "metadata": {
-                "description": "The ID of the DNS zone used for blob services."
+                "description": "The runtime to use for the function app"
               }
+            },
+            "functionWorkerProcessCount": {
+              "type": "int",
+              "defaultValue": 1,
+              "metadata": {
+                "description": "The number of function worker processes to run"
+              },
+              "maxValue": 10
+            },
+            "whitelistIps": {
+              "type": "array",
+              "defaultValue": []
             }
           },
           "variables": {
-            "saIpRules": "[map(range(0, length(parameters('whitelistIps'))), lambda('i', createObject('action', 'Allow', 'value', parameters('whitelistIps')[lambdaVariables('i')])))]",
-            "saSubnetRules": "[map(range(0, length(parameters('subnetIds'))), lambda('i', createObject('id', parameters('subnetIds')[lambdaVariables('i')])))]",
-            "isTestEnvironment": "[or(equals(parameters('environment'), 'test'), equals(parameters('environment'), 'dev'))]",
-            "storageAccountName": "[toLower(if(empty(parameters('environment')), format('sa{0}', parameters('slug')), format('sa{0}{1}', parameters('slug'), parameters('environment'))))]",
-            "privateEndpointName": "[format('pep-{0}', variables('storageAccountName'))]",
-            "secretName": "[format('{0}-access-key', variables('storageAccountName'))]",
-            "deleteRetentionDays": "[if(variables('isTestEnvironment'), 7, 30)]",
-            "restorePolicyDays": "[if(variables('isTestEnvironment'), 6, 29)]"
+            "functionAppName": "[format('fn-{0}-{1}', parameters('slug'), parameters('env'))]",
+            "dehyphenatedAppName": "[replace(variables('functionAppName'), '-', '')]",
+            "storageAccountName": "[format('st{0}', variables('dehyphenatedAppName'))]",
+            "storageIpRules": "[map(range(0, length(parameters('whitelistIps'))), lambda('i', createObject('action', 'Allow', 'value', parameters('whitelistIps')[lambdaVariables('i')])))]"
           },
           "resources": {
-            "saPep::saPdnszoneGroup": {
-              "condition": "[not(empty(parameters('privateEndpointSubnetId')))]",
-              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
-              "apiVersion": "2022-05-01",
-              "name": "[format('{0}/{1}', variables('privateEndpointName'), format('pdnsZoneGroup-{0}', variables('storageAccountName')))]",
-              "properties": {
-                "privateDnsZoneConfigs": [
-                  {
-                    "name": "blob",
-                    "properties": {
-                      "privateDnsZoneId": "[parameters('privateDnsZoneId')]"
-                    }
-                  }
-                ]
-              },
+            "fnStorage::fileService::fnShare": {
+              "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', toLower(variables('functionAppName')))]",
               "dependsOn": [
-                "saPep",
-                "storageaccount"
+                "fnStorage::fileService"
               ]
             },
-            "storageaccount": {
+            "fnStorage::fileService": {
+              "type": "Microsoft.Storage/storageAccounts/fileServices",
+              "apiVersion": "2022-09-01",
+              "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+              "dependsOn": [
+                "fnStorage"
+              ]
+            },
+            "fnStorage": {
               "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2022-05-01",
+              "apiVersion": "2022-09-01",
               "name": "[variables('storageAccountName')]",
               "location": "[parameters('location')]",
-              "kind": "StorageV2",
               "sku": {
                 "name": "Standard_LRS"
               },
+              "kind": "StorageV2",
               "properties": {
-                "accessTier": "Cool",
+                "accessTier": "Hot",
                 "minimumTlsVersion": "TLS1_2",
-                "allowedCopyScope": "AAD",
-                "largeFileSharesState": "Disabled",
-                "supportsHttpsTrafficOnly": true,
-                "defaultToOAuthAuthentication": true,
-                "allowSharedKeyAccess": true,
                 "allowBlobPublicAccess": false,
-                "isNfsV3Enabled": false,
-                "allowCrossTenantReplication": false,
-                "isSftpEnabled": false,
+                "supportsHttpsTrafficOnly": true,
                 "networkAcls": {
                   "defaultAction": "Deny",
-                  "ipRules": "[variables('saIpRules')]",
-                  "virtualNetworkRules": "[variables('saSubnetRules')]"
+                  "ipRules": "[variables('storageIpRules')]",
+                  "virtualNetworkRules": [
+                    {
+                      "id": "[parameters('delegationSubnetId')]"
+                    }
+                  ]
                 }
               }
             },
-            "blobService": {
-              "type": "Microsoft.Storage/storageAccounts/blobServices",
-              "apiVersion": "2022-05-01",
-              "name": "[format('{0}/{1}', variables('storageAccountName'), 'default')]",
+            "appInsights": {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[format('ai-{0}', variables('functionAppName'))]",
+              "location": "[parameters('location')]",
+              "kind": "other",
               "properties": {
-                "isVersioningEnabled": true,
-                "changeFeed": {
-                  "enabled": true,
-                  "retentionInDays": "[if(variables('isTestEnvironment'), 7, null())]"
-                },
-                "containerDeleteRetentionPolicy": {
-                  "allowPermanentDelete": false,
-                  "enabled": true,
-                  "days": "[variables('deleteRetentionDays')]"
-                },
-                "deleteRetentionPolicy": {
-                  "allowPermanentDelete": false,
-                  "enabled": true,
-                  "days": "[variables('deleteRetentionDays')]"
-                },
-                "restorePolicy": {
-                  "enabled": true,
-                  "days": "[variables('restorePolicyDays')]"
+                "Application_Type": "web",
+                "Flow_Type": "Bluefield",
+                "Request_Source": "CustomDeployment",
+                "WorkspaceResourceId": "[parameters('logAnalyticsWorkspaceId')]"
+              }
+            },
+            "fnApp": {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2022-03-01",
+              "name": "[variables('functionAppName')]",
+              "location": "[parameters('location')]",
+              "kind": "functionapp",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "publicNetworkAccess": "Enabled",
+                "serverFarmId": "[parameters('appServicePlanId')]",
+                "siteConfig": {
+                  "appSettings": [
+                    {
+                      "name": "AzureWebJobsStorage",
+                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value)]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                      "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};EndpointSuffix={1};AccountKey={2}', variables('storageAccountName'), environment().suffixes.storage, listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value)]"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTSHARE",
+                      "value": "[toLower(variables('functionAppName'))]"
+                    },
+                    {
+                      "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                      "value": "true"
+                    },
+                    {
+                      "name": "FUNCTIONS_EXTENSION_VERSION",
+                      "value": "~4"
+                    },
+                    {
+                      "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                      "value": "[reference('appInsights').InstrumentationKey]"
+                    },
+                    {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": "[parameters('functionWorkerRuntime')]"
+                    },
+                    {
+                      "name": "FUNCTIONS_WORKER_PROCESS_COUNT",
+                      "value": "[format('{0}', parameters('functionWorkerProcessCount'))]"
+                    },
+                    {
+                      "name": "WEBSITE_VNET_ROUTE_ALL",
+                      "value": "1"
+                    },
+                    {
+                      "name": "WEBSITE_CONTENTOVERVNET",
+                      "value": "1"
+                    },
+                    {
+                      "name": "WEBSITE_DNS_SERVER",
+                      "value": "168.63.129.16"
+                    }
+                  ]
                 }
               },
               "dependsOn": [
-                "storageaccount"
+                "appInsights",
+                "fnStorage"
               ]
             },
-            "blobContainer": {
-              "copy": {
-                "name": "blobContainer",
-                "count": "[length(parameters('containerNames'))]"
-              },
-              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-              "apiVersion": "2022-05-01",
-              "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', parameters('containerNames')[copyIndex()])]",
+            "functionAppName_virtualNetwork": {
+              "condition": "[not(equals(parameters('delegationSubnetId'), ''))]",
+              "type": "Microsoft.Web/sites/networkConfig",
+              "apiVersion": "2022-03-01",
+              "name": "[format('{0}/{1}', variables('functionAppName'), 'virtualNetwork')]",
               "properties": {
-                "immutableStorageWithVersioning": {
-                  "enabled": false
-                },
-                "publicAccess": "None"
+                "subnetResourceId": "[parameters('delegationSubnetId')]",
+                "swiftSupported": true
               },
               "dependsOn": [
-                "blobService"
+                "fnApp"
               ]
             },
-            "blobserviceDiag": {
+            "fnAppDiag": {
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}/blobServices/{1}', variables('storageAccountName'), 'default')]",
-              "name": "blobServiceDiag",
+              "scope": "[format('Microsoft.Web/sites/{0}', variables('functionAppName'))]",
+              "name": "fnAppDiag",
               "properties": {
                 "logs": [
                   {
-                    "category": "StorageRead",
+                    "categoryGroup": "allLogs",
                     "enabled": true
                   },
                   {
-                    "category": "StorageWrite",
-                    "enabled": true
-                  },
-                  {
-                    "category": "StorageDelete",
+                    "categoryGroup": "audit",
                     "enabled": true
                   }
                 ],
                 "metrics": [
                   {
-                    "category": "Transaction",
+                    "category": "AllMetrics",
                     "enabled": true
                   }
                 ],
                 "workspaceId": "[parameters('logAnalyticsWorkspaceId')]"
               },
               "dependsOn": [
-                "blobService"
-              ]
-            },
-            "storageaccountDiag": {
-              "type": "Microsoft.Insights/diagnosticSettings",
-              "apiVersion": "2021-05-01-preview",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountName'))]",
-              "name": "storageaccountDiag",
-              "properties": {
-                "metrics": [
-                  {
-                    "category": "Transaction",
-                    "enabled": true
-                  }
-                ],
-                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]"
-              },
-              "dependsOn": [
-                "storageaccount"
-              ]
-            },
-            "saPep": {
-              "condition": "[not(empty(parameters('privateEndpointSubnetId')))]",
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2022-05-01",
-              "name": "[variables('privateEndpointName')]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "subnet": {
-                  "id": "[parameters('privateEndpointSubnetId')]"
-                },
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "[variables('privateEndpointName')]",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-                      "groupIds": [
-                        "blob"
-                      ]
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "blobService",
-                "storageaccount"
-              ]
-            },
-            "keyVaultSecret": {
-              "type": "Microsoft.Resources/deployments",
-              "apiVersion": "2022-09-01",
-              "name": "[variables('secretName')]",
-              "resourceGroup": "[parameters('keyVaultResourceGroup')]",
-              "properties": {
-                "expressionEvaluationOptions": {
-                  "scope": "inner"
-                },
-                "mode": "Incremental",
-                "parameters": {
-                  "keyVaultName": {
-                    "value": "[parameters('keyVaultName')]"
-                  },
-                  "secretName": {
-                    "value": "[variables('secretName')]"
-                  },
-                  "secretValue": {
-                    "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-05-01').keys[0].value]"
-                  }
-                },
-                "template": {
-                  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                  "languageVersion": "1.10-experimental",
-                  "contentVersion": "1.0.0.0",
-                  "metadata": {
-                    "_EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
-                    "_generator": {
-                      "name": "bicep",
-                      "version": "0.17.1.54307",
-                      "templateHash": "8685881587734095567"
-                    }
-                  },
-                  "parameters": {
-                    "keyVaultName": {
-                      "type": "string",
-                      "metadata": {
-                        "description": "The name of the Key Vault in which this secret should be stored."
-                      }
-                    },
-                    "secretName": {
-                      "type": "string",
-                      "metadata": {
-                        "description": "The name of the secret."
-                      }
-                    },
-                    "secretValue": {
-                      "type": "securestring",
-                      "metadata": {
-                        "description": "The value of the secret."
-                      }
-                    }
-                  },
-                  "resources": {
-                    "keyVault": {
-                      "existing": true,
-                      "type": "Microsoft.KeyVault/vaults",
-                      "apiVersion": "2022-07-01",
-                      "name": "[parameters('keyVaultName')]"
-                    },
-                    "secret": {
-                      "type": "Microsoft.KeyVault/vaults/secrets",
-                      "apiVersion": "2022-07-01",
-                      "name": "[format('{0}/{1}', parameters('keyVaultName'), parameters('secretName'))]",
-                      "properties": {
-                        "value": "[parameters('secretValue')]"
-                      }
-                    }
-                  }
-                }
-              },
-              "dependsOn": [
-                "storageaccount"
+                "fnApp"
               ]
             }
           },
           "outputs": {
-            "storageAccountId": {
+            "functionAppManagedIdentityPrincipalId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              "value": "[reference('fnApp', '2022-03-01', 'full').identity.principalId]"
             },
-            "storageAccountName": {
+            "functionAppId": {
               "type": "string",
-              "value": "[variables('storageAccountName')]"
+              "value": "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
+            },
+            "functionAppUrl": {
+              "type": "string",
+              "value": "[reference('fnApp').defaultHostName]"
             }
           }
         }
       },
       "dependsOn": [
-        "kv",
+        "asp",
         "law"
       ]
     }

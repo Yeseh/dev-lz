@@ -7,7 +7,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "15405067265643825935"
+      "templateHash": "3094171897344091938"
     }
   },
   "parameters": {
@@ -163,7 +163,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "5020305178884063203"
+              "templateHash": "7864025575955378178"
             }
           },
           "parameters": {
@@ -212,13 +212,7 @@
             },
             "dnsZones": {
               "type": "array",
-              "defaultValue": [
-                "[format('privatelink.blob.{0}', environment().suffixes.storage)]",
-                "[format('privatelink.file.{0}', environment().suffixes.storage)]",
-                "[format('privatelink.queue.{0}', environment().suffixes.storage)]",
-                "[format('privatelink.table.{0}', environment().suffixes.storage)]",
-                "[format('privatelink{0}', environment().suffixes.keyvaultDns)]"
-              ],
+              "defaultValue": [],
               "metadata": {
                 "description": "The DNS zones."
               }
@@ -262,7 +256,7 @@
               "name": "[format('{0}/{1}', parameters('dnsZones')[copyIndex()], last(split(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '/')))]",
               "location": "global",
               "properties": {
-                "registrationEnabled": true,
+                "registrationEnabled": false,
                 "virtualNetwork": {
                   "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
                 }

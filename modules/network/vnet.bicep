@@ -19,11 +19,11 @@ param subnetAddressPrefix string
 
 @description('The DNS zones.')
 param dnsZones array = [
-  'privatelink.blob.${az.environment().suffixes.storage}'
-  'privatelink.file.${az.environment().suffixes.storage}'
-  'privatelink.queue.${az.environment().suffixes.storage}'
-  'privatelink.table.${az.environment().suffixes.storage}'
-  'privatelink${az.environment().suffixes.keyvaultDns}'
+  // 'privatelink.blob.${az.environment().suffixes.storage}'
+  // 'privatelink.file.${az.environment().suffixes.storage}'
+  // 'privatelink.queue.${az.environment().suffixes.storage}'
+  // 'privatelink.table.${az.environment().suffixes.storage}'
+  // 'privatelink${az.environment().suffixes.keyvaultDns}'
 ]
 
 var vnetName = empty(environment)? 'vnet-${slug}' : 'vnet-${slug}-${environment}'

@@ -45,6 +45,7 @@ module kv '../../modules/keyvault/keyvault.bicep' = {
     location: location
     slug: slug 
     logAnalyticsWorkspaceId: law.outputs.workspaceId
+    enablePurgeProtection: false
   }
 }
 

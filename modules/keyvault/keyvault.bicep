@@ -26,6 +26,9 @@ param privateEndpointSubnetId string = ''
 @description('The ID of the private DNS zone.')
 param privateDnsZoneId string = ''
 
+@description('Whether to enable purge protection')
+param enablePurgeProtection bool = true
+
 param allowPublicAccess bool = false
 
 var kvIpRules = map(range(0, length(whitelistIps)), i => {
@@ -57,7 +60,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
       virtualNetworkRules: kvSubnetRules 
       ipRules: kvIpRules
     }
-    enablePurgeProtection: true
+    enablePurgeProtection: enablePurgeProtection 
     softDeleteRetentionInDays: 7
     enableSoftDelete: true
   }

@@ -7,7 +7,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.17.1.54307",
-      "templateHash": "3094171897344091938"
+      "templateHash": "8969588224852151068"
     }
   },
   "parameters": {
@@ -539,6 +539,9 @@
           },
           "logAnalyticsWorkspaceId": {
             "value": "[reference('law').outputs.workspaceId.value]"
+          },
+          "enablePurgeProtection": {
+            "value": false
           }
         },
         "template": {
@@ -550,7 +553,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.17.1.54307",
-              "templateHash": "17868888039603934979"
+              "templateHash": "785391349086032928"
             }
           },
           "parameters": {
@@ -616,6 +619,13 @@
                 "description": "The ID of the private DNS zone."
               }
             },
+            "enablePurgeProtection": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Whether to enable purge protection"
+              }
+            },
             "allowPublicAccess": {
               "type": "bool",
               "defaultValue": false
@@ -648,7 +658,7 @@
                   "virtualNetworkRules": "[variables('kvSubnetRules')]",
                   "ipRules": "[variables('kvIpRules')]"
                 },
-                "enablePurgeProtection": true,
+                "enablePurgeProtection": "[parameters('enablePurgeProtection')]",
                 "softDeleteRetentionInDays": 7,
                 "enableSoftDelete": true
               }
